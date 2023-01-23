@@ -14,6 +14,7 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -30,7 +31,7 @@ public class Client {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "middle_name")
+    @Column(name = "middle_name") // * nullable
     private String middleName;
 
     @Column(name = "birth_date", nullable = false)
@@ -39,26 +40,26 @@ public class Client {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "gender", nullable = false)
+    @Column(name = "gender") // * nullable
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(name = "marital_status", nullable = false)
+    @Column(name = "marital_status") // * nullable
     @Enumerated(EnumType.STRING)
     private MaritalStatus maritalStatus;
 
-    @Column(name = "dependent_amount", nullable = false)
+    @Column(name = "dependent_amount") // * nullable
     private Integer dependentAmount;
 
     @Column(name = "passport", nullable = false)
     @Type(type = "PassportType")
     private Passport passport;
 
-    @Column(name = "employment", nullable = false)
+    @Column(name = "employment") // * nullable
     @Type(type = "EmploymentType")
     private Employment employment;
 
-    @Column(name = "account", nullable = false)
+    @Column(name = "account") // * nullable
     private String account;
 
     @Override

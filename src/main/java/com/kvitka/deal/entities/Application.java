@@ -13,6 +13,7 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -24,11 +25,11 @@ public class Application {
     private Long applicationId;
 
     @OneToOne
-    @JoinColumn(name = "client_id")
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
     @OneToOne
-    @JoinColumn(name = "credit_id")
+    @JoinColumn(name = "credit_id") // * nullable
     private Credit credit;
 
     @Column(name = "status", nullable = false)
@@ -38,14 +39,15 @@ public class Application {
     @Column(name = "creation_date", nullable = false)
     private ZonedDateTime creationDate;
 
-    @Column(name = "applied_offer", nullable = false)
+    @Column(name = "applied_offer") // * nullable
     @Type(type = "AppliedOfferType")
     private AppliedOffer appliedOffer;
 
-    @Column(name = "sign_date", nullable = false)
+    @Column(name = "sign_date") // * nullable
     private ZonedDateTime signDate;
 
-    // ? TODO ses_code
+    @Column(name = "ses_code") // * nullable
+    private Integer sesCode;
 
     @Column(name = "status_history", nullable = false)
     @Type(type = "StatusHistoryType")
