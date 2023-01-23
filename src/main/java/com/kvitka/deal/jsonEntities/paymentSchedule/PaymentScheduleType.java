@@ -39,11 +39,11 @@ public class PaymentScheduleType implements UserType {
         try {
             JSONArray jsonArray = new JSONArray(cellContent);
             int length = jsonArray.length();
-            List<PaymentSchedule.PaymentScheduleElement> units = new ArrayList<>();
+            List<PaymentSchedule.PaymentScheduleUnit> units = new ArrayList<>();
             JSONObject jsonObject;
             for (int i = 0; i < length; i++) {
                 jsonObject = jsonArray.getJSONObject(i);
-                units.add(new PaymentSchedule.PaymentScheduleElement(
+                units.add(new PaymentSchedule.PaymentScheduleUnit(
                         jsonObject.getInt("number"),
                         LocalDate.parse(jsonObject.getString("date")),
                         new BigDecimal(jsonObject.getString("totalPayment")),
@@ -66,7 +66,7 @@ public class PaymentScheduleType implements UserType {
         }
         try {
             JSONArray jsonArray = new JSONArray();
-            for (PaymentSchedule.PaymentScheduleElement element : ((PaymentSchedule) value).getAll()) {
+            for (PaymentSchedule.PaymentScheduleUnit element : ((PaymentSchedule) value).getAll()) {
                 jsonArray.put(new JSONObject()
                         .put("number", element.getNumber())
                         .put("date", element.getDate().toString())

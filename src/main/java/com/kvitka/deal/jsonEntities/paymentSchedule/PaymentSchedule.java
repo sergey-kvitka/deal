@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 @ToString
 public class PaymentSchedule implements Serializable {
-    private List<PaymentScheduleElement> paymentScheduleElements;
+    private List<PaymentScheduleUnit> paymentScheduleElements;
 
-    public PaymentSchedule(List<PaymentScheduleElement> paymentScheduleElements) {
+    public PaymentSchedule(List<PaymentScheduleUnit> paymentScheduleElements) {
         this.paymentScheduleElements = new ArrayList<>(paymentScheduleElements);
     }
 
@@ -24,7 +24,7 @@ public class PaymentSchedule implements Serializable {
     public PaymentSchedule(PaymentSchedule paymentSchedule) {
         this(paymentSchedule.getAll()
                 .stream()
-                .map(PaymentScheduleElement::new)
+                .map(PaymentScheduleUnit::new)
                 .collect(Collectors.toList()));
     }
 
@@ -32,25 +32,25 @@ public class PaymentSchedule implements Serializable {
         return paymentScheduleElements.size();
     }
 
-    public PaymentScheduleElement getLast() {
+    public PaymentScheduleUnit getLast() {
         int size = size();
         if (size == 0) return null;
         return paymentScheduleElements.get(size - 1);
     }
 
-    public PaymentScheduleElement get(int index) {
+    public PaymentScheduleUnit get(int index) {
         return paymentScheduleElements.get(index);
     }
 
-    public void add(PaymentScheduleElement paymentScheduleElement) {
+    public void add(PaymentScheduleUnit paymentScheduleElement) {
         paymentScheduleElements.add(paymentScheduleElement);
     }
 
-    public List<PaymentScheduleElement> getAll() {
+    public List<PaymentScheduleUnit> getAll() {
         return new ArrayList<>(paymentScheduleElements);
     }
 
-    public void set(List<PaymentScheduleElement> paymentScheduleElements) {
+    public void set(List<PaymentScheduleUnit> paymentScheduleElements) {
         this.paymentScheduleElements = new ArrayList<>(paymentScheduleElements);
     }
 
@@ -58,7 +58,7 @@ public class PaymentSchedule implements Serializable {
     @Setter
     @ToString
     @AllArgsConstructor
-    public static class PaymentScheduleElement implements Serializable {
+    public static class PaymentScheduleUnit implements Serializable {
         private Integer number;
         private LocalDate date;
         private BigDecimal totalPayment;
@@ -66,13 +66,13 @@ public class PaymentSchedule implements Serializable {
         private BigDecimal debtPayment;
         private BigDecimal remainingDebt;
 
-        public PaymentScheduleElement(PaymentScheduleElement paymentScheduleElement) {
-            this.number = paymentScheduleElement.getNumber();
-            this.date = paymentScheduleElement.getDate().plusDays(0);
-            this.totalPayment = paymentScheduleElement.getTotalPayment().add(new BigDecimal(0));
-            this.interestPayment = paymentScheduleElement.getInterestPayment().add(new BigDecimal(0));
-            this.debtPayment = paymentScheduleElement.getDebtPayment().add(new BigDecimal(0));
-            this.remainingDebt = paymentScheduleElement.getRemainingDebt().add(new BigDecimal(0));
+        public PaymentScheduleUnit(PaymentScheduleUnit paymentScheduleUnit) {
+            this.number = paymentScheduleUnit.getNumber();
+            this.date = paymentScheduleUnit.getDate().plusDays(0);
+            this.totalPayment = paymentScheduleUnit.getTotalPayment().add(new BigDecimal(0));
+            this.interestPayment = paymentScheduleUnit.getInterestPayment().add(new BigDecimal(0));
+            this.debtPayment = paymentScheduleUnit.getDebtPayment().add(new BigDecimal(0));
+            this.remainingDebt = paymentScheduleUnit.getRemainingDebt().add(new BigDecimal(0));
         }
     }
 }

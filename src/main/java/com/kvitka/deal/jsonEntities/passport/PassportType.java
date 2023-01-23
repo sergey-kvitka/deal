@@ -34,11 +34,13 @@ public class PassportType implements UserType {
         }
         try {
             JSONObject jsonPassport = new JSONObject(cellContent);
+            String issueBranch = null;
+            LocalDate date = null;
+            if (jsonPassport.has("issueBranch")) issueBranch = jsonPassport.getString("issueBranch");
+            if (jsonPassport.has("issueDate")) date = LocalDate.parse(jsonPassport.getString("issueDate"));
             return new Passport(
                     jsonPassport.getString("series"),
-                    jsonPassport.getString("number"),
-                    jsonPassport.getString("issueBranch"),
-                    LocalDate.parse(jsonPassport.getString("issueDate")));
+                    jsonPassport.getString("number"), issueBranch, date);
         } catch (final Exception ex) {
             throw new RuntimeException("Failed to convert String to Invoice: " + ex.getMessage(), ex);
         }
@@ -52,12 +54,14 @@ public class PassportType implements UserType {
             return;
         }
         try {
-            JSONObject jsonPassport = new JSONObject();
             Passport passport = (Passport) value;
-            jsonPassport.put("series", passport.getSeries());
-            jsonPassport.put("number", passport.getNumber());
-            jsonPassport.put("issueBranch", passport.getIssueBranch());
-            jsonPassport.put("issueDate", passport.getIssueDate().toString());
+            String issueBranch = passport.getIssueBranch();
+            LocalDate issueDate = passport.getIssueDate();
+            JSONObject jsonPassport = new JSONObject()
+                    .put("series", passport.getSeries())
+                    .put("number", passport.getNumber())
+                    .put("issueBranch", issueBranch)
+                    .put("issueDate", issueDate == null ? null : issueDate.toString());
             ps.setObject(index, jsonPassport.toString(), Types.OTHER);
         } catch (final Exception ex) {
             throw new RuntimeException("Failed to convert Invoice to String: " + ex.getMessage(), ex);

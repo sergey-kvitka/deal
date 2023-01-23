@@ -10,3 +10,10 @@ spring:
     hibernate:
       ddl-auto: update
     generate-ddl: true
+
+rest:
+  conveyor:
+    url: http://localhost:8081
+    endpoints:
+      offers: conveyor/offers
+      calculation: conveyor/calculation
