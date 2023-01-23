@@ -64,6 +64,12 @@ public class StatusHistory implements Serializable {
         private ZonedDateTime time;
         private ChangeType changeType;
 
+        public StatusHistoryUnit(ApplicationStatus status, ChangeType changeType) {
+            this.status = status;
+            this.time = ZonedDateTime.now();
+            this.changeType = changeType;
+        }
+
         public StatusHistoryUnit(StatusHistoryUnit statusHistoryUnit) {
             this.status = statusHistoryUnit.status;
             this.time = statusHistoryUnit.getTime().minusNanos(0);
