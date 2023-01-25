@@ -1,20 +1,18 @@
 package com.kvitka.deal.dtos;
 
 import com.kvitka.deal.entities.Credit;
-import com.kvitka.deal.jsonEntities.paymentSchedule.PaymentSchedule;
+import com.kvitka.deal.entities.PaymentSchedule;
+import com.kvitka.deal.entities.PaymentScheduleElement;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class CreditDTO {
     private BigDecimal amount;
     private Integer term;
@@ -30,9 +28,7 @@ public class CreditDTO {
                 amount, term,
                 monthlyPayment,
                 rate, psk,
-                new PaymentSchedule(paymentSchedule.stream()
-                        .map(PaymentScheduleElement::toPaymentScheduleUnit)
-                        .collect(Collectors.toList())),
+                new PaymentSchedule(paymentSchedule),
                 isInsuranceEnabled,
                 isSalaryClient,
                 null);
@@ -47,9 +43,6 @@ public class CreditDTO {
                 credit.getPsk(),
                 credit.getInsuranceEnable(),
                 credit.getSalaryClient(),
-                credit.getPaymentSchedule().getAll()
-                        .stream()
-                        .map(PaymentScheduleElement::from)
-                        .collect(Collectors.toList()));
+                credit.getPaymentSchedule().getList());
     }
 }

@@ -1,15 +1,14 @@
 package com.kvitka.deal.controllers;
 
-import com.kvitka.deal.dtos.*;
-import com.kvitka.deal.entities.Application;
-import com.kvitka.deal.entities.Client;
-import com.kvitka.deal.entities.Credit;
+
+import com.kvitka.deal.dtos.CreditDTO;
+import com.kvitka.deal.dtos.FinishRegistrationRequestDTO;
+import com.kvitka.deal.dtos.LoanApplicationRequestDTO;
+import com.kvitka.deal.dtos.ScoringDataDTO;
+import com.kvitka.deal.entities.*;
 import com.kvitka.deal.enums.ApplicationStatus;
 import com.kvitka.deal.enums.ChangeType;
 import com.kvitka.deal.enums.CreditStatus;
-import com.kvitka.deal.jsonEntities.appliedOffer.AppliedOffer;
-import com.kvitka.deal.jsonEntities.passport.Passport;
-import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory;
 import com.kvitka.deal.services.impl.ApplicationServiceImpl;
 import com.kvitka.deal.services.impl.ClientServiceImpl;
 import com.kvitka.deal.services.impl.CreditServiceImpl;
@@ -49,7 +48,7 @@ public class DealRestController {
     }
 
     @PostMapping("application")
-    public List<LoanOfferDTO> application(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO) {
+    public List<LoanOffer> application(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO) {
         ZonedDateTime timeNow = ZonedDateTime.now();
         ApplicationStatus preapproval = ApplicationStatus.PREAPPROVAL;
         Client client = Client.builder()
@@ -59,41 +58,40 @@ public class DealRestController {
                 .birthdate(loanApplicationRequestDTO.getBirthdate())
                 .passport(new Passport(
                         loanApplicationRequestDTO.getPassportSeries(),
-                        loanApplicationRequestDTO.getPassportNumber(), null, null))
+                        loanApplicationRequestDTO.getPassportNumber()))
                 .email(loanApplicationRequestDTO.getEmail())
                 .build();
 
-        ResponseEntity<LoanOfferDTO[]> loanOffersResponse = restTemplateService.postForEntity(
+        ResponseEntity<LoanOffer[]> loanOffersResponse = restTemplateService.postForEntity(
                 conveyorURL + '/' + offersConveyorEndpoint,
-                loanApplicationRequestDTO, LoanOfferDTO[].class);
+                loanApplicationRequestDTO, LoanOffer[].class);
 
         client = clientService.save(client);
 
         Application application = Application.builder()
                 .client(client)
                 .status(preapproval)
-                .statusHistory(new StatusHistory(List.of(
-                        new StatusHistory.StatusHistoryUnit(preapproval, timeNow, ChangeType.AUTOMATIC))))
+                .statusHistory(new StatusHistoryList(List.of(
+                        new StatusHistory(preapproval, timeNow, ChangeType.AUTOMATIC))))
                 .creationDate(timeNow)
                 .build();
+        System.out.println(application);
         application = applicationService.save(application);
 
-        List<LoanOfferDTO> loanOffers = List.of(Objects.requireNonNull(loanOffersResponse.getBody()));
-        for (LoanOfferDTO loanOfferDTO : loanOffers) {
-            loanOfferDTO.setApplicationId(application.getApplicationId());
+        List<LoanOffer> loanOffers = List.of(Objects.requireNonNull(loanOffersResponse.getBody()));
+        for (LoanOffer loanOffer : loanOffers) {
+            loanOffer.setApplicationId(application.getApplicationId());
         }
         return loanOffers;
     }
 
     @PutMapping("offer")
-    public void offer(@RequestBody LoanOfferDTO loanOfferDTO) {
-        Application application = applicationService.findById(loanOfferDTO.getApplicationId());
+    public void offer(@RequestBody LoanOffer loanOffer) {
+        Application application = applicationService.findById(loanOffer.getApplicationId());
         ApplicationStatus applicationStatus = ApplicationStatus.APPROVED; // ?.
         application.setStatus(applicationStatus);
-        application.getStatusHistory().add(new StatusHistory.StatusHistoryUnit(
-                applicationStatus,
-                ChangeType.AUTOMATIC));
-        application.setAppliedOffer(loanOfferDTO.toAppliedOffer());
+        application.getStatusHistory().getList().add(new StatusHistory(applicationStatus, ChangeType.AUTOMATIC));
+        application.setAppliedOffer(loanOffer);
         applicationService.save(application);
     }
 
@@ -101,7 +99,7 @@ public class DealRestController {
     public void calculate(@PathVariable Long applicationId,
                           @RequestBody FinishRegistrationRequestDTO finishRegistrationRequestDTO) {
         Application application = applicationService.findById(applicationId);
-        EmploymentDTO employmentDTO = finishRegistrationRequestDTO.getEmployment();
+        Employment employment = finishRegistrationRequestDTO.getEmployment();
         Client client = application.getClient();
         Passport passport = client.getPassport();
         passport.setIssueBranch(finishRegistrationRequestDTO.getPassportIssueBranch());
@@ -110,11 +108,11 @@ public class DealRestController {
         client.setMaritalStatus(finishRegistrationRequestDTO.getMaritalStatus());
         client.setDependentAmount(finishRegistrationRequestDTO.getDependentAmount());
         client.setAccount(finishRegistrationRequestDTO.getAccount());
-        client.setEmployment(employmentDTO.toEmployment());
+        client.setEmployment(employment);
 
-        AppliedOffer appliedOffer = application.getAppliedOffer();
+        LoanOffer appliedOffer = application.getAppliedOffer();
         ScoringDataDTO scoringDataDTO = new ScoringDataDTO(
-                appliedOffer.getTotalAmount(), // ? requested or total
+                appliedOffer.getRequestedAmount(), // ? requested or total
                 appliedOffer.getTerm(),
                 client.getFirstName(),
                 client.getLastName(),
@@ -127,7 +125,7 @@ public class DealRestController {
                 passport.getIssueBranch(),
                 client.getMaritalStatus(),
                 client.getDependentAmount(),
-                employmentDTO,
+                employment,
                 client.getAccount(),
                 appliedOffer.getIsInsuranceEnabled(),
                 appliedOffer.getIsSalaryClient());

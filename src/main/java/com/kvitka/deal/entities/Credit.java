@@ -1,18 +1,18 @@
 package com.kvitka.deal.entities;
 
 import com.kvitka.deal.enums.CreditStatus;
-import com.kvitka.deal.jsonEntities.paymentSchedule.PaymentSchedule;
 import lombok.*;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -39,7 +39,7 @@ public class Credit {
     private BigDecimal psk;
 
     @Column(name = "payment_schedule", nullable = false)
-    @Type(type = "PaymentScheduleType")
+    @JdbcTypeCode(SqlTypes.JSON)
     private PaymentSchedule paymentSchedule;
 
     @Column(name = "insurance_enable", nullable = false)

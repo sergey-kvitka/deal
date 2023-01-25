@@ -1,14 +1,17 @@
 package com.kvitka.deal.entities;
 
+
 import com.kvitka.deal.enums.ApplicationStatus;
-import com.kvitka.deal.jsonEntities.appliedOffer.AppliedOffer;
-import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory;
 import lombok.*;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -40,8 +43,8 @@ public class Application {
     private ZonedDateTime creationDate;
 
     @Column(name = "applied_offer") // * nullable
-    @Type(type = "AppliedOfferType")
-    private AppliedOffer appliedOffer;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private LoanOffer appliedOffer;
 
     @Column(name = "sign_date") // * nullable
     private ZonedDateTime signDate;
@@ -50,8 +53,8 @@ public class Application {
     private Integer sesCode;
 
     @Column(name = "status_history", nullable = false)
-    @Type(type = "StatusHistoryType")
-    private StatusHistory statusHistory;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private StatusHistoryList statusHistory;
 
     @Override
     public boolean equals(Object o) {

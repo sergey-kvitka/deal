@@ -1,11 +1,11 @@
 package com.kvitka.deal.dtos;
 
+import com.kvitka.deal.entities.Employment;
 import com.kvitka.deal.enums.Gender;
 import com.kvitka.deal.enums.MaritalStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,7 +13,6 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class ScoringDataDTO {
     private BigDecimal amount;
     private Integer term;
@@ -28,7 +27,7 @@ public class ScoringDataDTO {
     private String passportIssueBranch;
     private MaritalStatus maritalStatus;
     private Integer dependentAmount;
-    private EmploymentDTO employment;
+    private Employment employment;
     private String account;
     private Boolean isInsuranceEnabled;
     private Boolean isSalaryClient;

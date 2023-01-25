@@ -2,13 +2,12 @@ package com.kvitka.deal.entities;
 
 import com.kvitka.deal.enums.Gender;
 import com.kvitka.deal.enums.MaritalStatus;
-import com.kvitka.deal.jsonEntities.employment.Employment;
-import com.kvitka.deal.jsonEntities.passport.Passport;
 import lombok.*;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -52,11 +51,11 @@ public class Client {
     private Integer dependentAmount;
 
     @Column(name = "passport", nullable = false)
-    @Type(type = "PassportType")
+    @JdbcTypeCode(SqlTypes.JSON)
     private Passport passport;
 
     @Column(name = "employment") // * nullable
-    @Type(type = "EmploymentType")
+    @JdbcTypeCode(SqlTypes.JSON)
     private Employment employment;
 
     @Column(name = "account") // * nullable
