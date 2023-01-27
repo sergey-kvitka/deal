@@ -4,7 +4,6 @@ import com.kvitka.deal.jsonEntities.paymentSchedule.PaymentSchedule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,7 +11,6 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class PaymentScheduleElement {
     private Integer number;
     private LocalDate date;

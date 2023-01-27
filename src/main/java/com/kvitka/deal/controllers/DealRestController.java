@@ -14,6 +14,7 @@ import com.kvitka.deal.services.impl.ApplicationServiceImpl;
 import com.kvitka.deal.services.impl.ClientServiceImpl;
 import com.kvitka.deal.services.impl.CreditServiceImpl;
 import com.kvitka.deal.services.impl.RestTemplateService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import java.util.Objects;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("deal")
 public class DealRestController {
 
@@ -39,14 +41,6 @@ public class DealRestController {
     private final ClientServiceImpl clientService;
     private final CreditServiceImpl creditService;
     private final RestTemplateService restTemplateService;
-
-    public DealRestController(ApplicationServiceImpl applicationService, ClientServiceImpl clientService,
-                              CreditServiceImpl creditService, RestTemplateService restTemplateService) {
-        this.applicationService = applicationService;
-        this.clientService = clientService;
-        this.creditService = creditService;
-        this.restTemplateService = restTemplateService;
-    }
 
     @PostMapping("application")
     public List<LoanOfferDTO> application(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO) {
@@ -114,7 +108,7 @@ public class DealRestController {
 
         AppliedOffer appliedOffer = application.getAppliedOffer();
         ScoringDataDTO scoringDataDTO = new ScoringDataDTO(
-                appliedOffer.getTotalAmount(), // ? requested or total
+                appliedOffer.getRequestedAmount(),
                 appliedOffer.getTerm(),
                 client.getFirstName(),
                 client.getLastName(),
