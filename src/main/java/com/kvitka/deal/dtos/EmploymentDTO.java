@@ -6,14 +6,12 @@ import com.kvitka.deal.jsonEntities.employment.Employment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class EmploymentDTO {
     private EmploymentStatus employmentStatus;
     private String employerINN;
