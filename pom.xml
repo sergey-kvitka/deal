@@ -68,11 +68,10 @@
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
 
-        <!-- TODO Swagger -->
-        <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.6.8</version>
+        <dependency> <!-- * swagger -->
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 
