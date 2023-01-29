@@ -78,12 +78,6 @@
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
         </dependency>
-
-<!--        <dependency> &lt;!&ndash; * liquibase &ndash;&gt;-->
-<!--            <groupId>org.liquibase</groupId>-->
-<!--            <artifactId>liquibase-core</artifactId>-->
-<!--            <version>3.4.1</version>-->
-<!--        </dependency>-->
     </dependencies>
 
     <build>
