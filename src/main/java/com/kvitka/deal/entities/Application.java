@@ -21,7 +21,7 @@ import java.util.Objects;
 public class Application {
     @Id
     @Column(name = "application_id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long applicationId;
 
     @OneToOne
@@ -39,7 +39,8 @@ public class Application {
     @Column(name = "creation_date", nullable = false)
     private ZonedDateTime creationDate;
 
-    @Column(name = "applied_offer") // * nullable
+    @Column(name = "applied_offer",
+            columnDefinition = "jsonb") // * nullable
     @Type(type = "AppliedOfferType")
     private AppliedOffer appliedOffer;
 
@@ -49,7 +50,8 @@ public class Application {
     @Column(name = "ses_code") // * nullable
     private Integer sesCode;
 
-    @Column(name = "status_history", nullable = false)
+    @Column(name = "status_history", nullable = false,
+            columnDefinition = "jsonb")
     @Type(type = "StatusHistoryType")
     private StatusHistory statusHistory;
 
@@ -64,6 +66,6 @@ public class Application {
     @Override
     public int hashCode() {
         return Objects.hash(applicationId, client, credit, status,
-                creationDate, appliedOffer, signDate, statusHistory);
+                creationDate, appliedOffer, signDate, sesCode, statusHistory);
     }
 }

@@ -20,7 +20,7 @@ import java.util.Objects;
 public class Credit {
     @Id
     @Column(name = "credit_id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long creditId;
 
     @Column(name = "amount", nullable = false)
@@ -38,7 +38,8 @@ public class Credit {
     @Column(name = "psk", nullable = false)
     private BigDecimal psk;
 
-    @Column(name = "payment_schedule", nullable = false)
+    @Column(name = "payment_schedule", nullable = false,
+            columnDefinition = "jsonb")
     @Type(type = "PaymentScheduleType")
     private PaymentSchedule paymentSchedule;
 
