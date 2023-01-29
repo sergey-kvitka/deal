@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-credit
+      author: kvitka
+      changes:
+        - createTable:
+            tableName: credit
+            columns:
+              - column:
+                  name: credit_id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: credit_status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: insurance_enable
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monthly_payment
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_schedule
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: psk
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rate
+                  type: numeric(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: salary_client
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: term
+                  type: integer
+                  constraints:
+                    nullable: false

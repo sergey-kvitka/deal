@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-application
+      author: kvitka
+      changes:
+        - createTable:
+            tableName: application
+            columns:
+              - column:
+                  name: application_id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: applied_offer
+                  type: jsonb
+              - column:
+                  name: creation_date
+                  type: timestamp(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ses_code
+                  type: integer
+              - column:
+                  name: sign_date
+                  type: timestamp(6)
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status_history
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: client_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_application_client_id
+                    nullable: false
+                    references: client(client_id)
+              - column:
+                  name: credit_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_application_credit_id
+                    references: credit(credit_id)
