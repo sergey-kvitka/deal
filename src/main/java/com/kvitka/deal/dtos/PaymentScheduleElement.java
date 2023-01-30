@@ -1,13 +1,15 @@
 package com.kvitka.deal.dtos;
 
-import com.kvitka.deal.jsonEntities.paymentSchedule.PaymentSchedule;
+import com.kvitka.deal.jsonEntities.paymentSchedule.PaymentSchedule.PaymentScheduleUnit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Slf4j
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,8 +21,9 @@ public class PaymentScheduleElement {
     private BigDecimal debtPayment;
     private BigDecimal remainingDebt;
 
-    public PaymentSchedule.PaymentScheduleUnit toPaymentScheduleUnit() {
-        return new PaymentSchedule.PaymentScheduleUnit(
+    public PaymentScheduleUnit toPaymentScheduleUnit() {
+        log.info("Converting PaymentScheduleElement (DTO) to PaymentScheduleUnit (PaymentScheduleElement = {})", this);
+        return new PaymentScheduleUnit(
                 number,
                 date,
                 totalPayment,
@@ -30,7 +33,9 @@ public class PaymentScheduleElement {
         );
     }
 
-    public static PaymentScheduleElement from(PaymentSchedule.PaymentScheduleUnit paymentScheduleUnit) {
+    public static PaymentScheduleElement from(PaymentScheduleUnit paymentScheduleUnit) {
+        log.info("Creating PaymentScheduleElement (DTO) by converting it from PaymentScheduleUnit " +
+                "(PaymentScheduleUnit = {})", paymentScheduleUnit);
         return new PaymentScheduleElement(
                 paymentScheduleUnit.getNumber(),
                 paymentScheduleUnit.getDate(),
