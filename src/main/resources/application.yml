@@ -6,10 +6,14 @@ spring:
     url: jdbc:postgresql://localhost:5432/neoflex-deal-db
     username: postgres
     password: 123456
+
   jpa:
     hibernate:
-      ddl-auto: update
-    generate-ddl: true
+      ddl-auto: validate
+    generate-ddl: false
+
+  liquibase:
+    enabled: true
 
 rest:
   conveyor:

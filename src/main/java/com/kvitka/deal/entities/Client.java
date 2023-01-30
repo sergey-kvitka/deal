@@ -22,7 +22,7 @@ import java.util.Objects;
 public class Client {
     @Id
     @Column(name = "client_id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long clientId;
 
     @Column(name = "first_name", nullable = false)
@@ -51,11 +51,13 @@ public class Client {
     @Column(name = "dependent_amount") // * nullable
     private Integer dependentAmount;
 
-    @Column(name = "passport", nullable = false)
+    @Column(name = "passport", nullable = false,
+            columnDefinition = "jsonb")
     @Type(type = "PassportType")
     private Passport passport;
 
-    @Column(name = "employment") // * nullable
+    @Column(name = "employment",
+            columnDefinition = "jsonb") // * nullable
     @Type(type = "EmploymentType")
     private Employment employment;
 
