@@ -16,7 +16,7 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = "sesCode")
 @Entity(name = "application")
 public class Application {
     @Id
