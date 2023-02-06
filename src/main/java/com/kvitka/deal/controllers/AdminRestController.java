@@ -38,11 +38,11 @@ public class AdminRestController {
     }
 
     @PutMapping("application/{applicationId}/status")
-    public void setDocumentCreatedStatus(@PathVariable Long applicationId) {
-        log.info("@GetMapping(application/{applicationId}/status) setDocumentCreatedStatus method called. Argument: {}",
-                applicationId);
+    public void setApplicationStatus(@PathVariable Long applicationId,
+                                     @RequestBody ApplicationStatus applicationStatus) {
+        log.info("@GetMapping(application/{applicationId}/status) setApplicationStatus method called. Arguments:" +
+                " application ID = {}, application status = {}", applicationId, applicationStatus);
         Application application = applicationService.findById(applicationId);
-        ApplicationStatus applicationStatus = ApplicationStatus.DOCUMENT_CREATED;
         application.setStatus(applicationStatus);
         application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, ChangeType.AUTOMATIC));
         log.info("Application status updated ({})", applicationStatus);
