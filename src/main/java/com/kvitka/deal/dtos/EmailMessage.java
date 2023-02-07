@@ -1,13 +1,12 @@
 package com.kvitka.deal.dtos;
 
 import com.kvitka.deal.enums.Theme;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "info")
 public class EmailMessage {
     String address;
     Theme theme;
