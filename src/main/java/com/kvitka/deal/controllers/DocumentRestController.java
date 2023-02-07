@@ -1,10 +1,13 @@
 package com.kvitka.deal.controllers;
 
+import com.kvitka.deal.dtos.EmailMessage;
 import com.kvitka.deal.entities.Application;
 import com.kvitka.deal.enums.ApplicationStatus;
 import com.kvitka.deal.enums.ChangeType;
+import com.kvitka.deal.enums.Theme;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory.StatusHistoryUnit;
 import com.kvitka.deal.services.impl.ApplicationServiceImpl;
+import com.kvitka.deal.services.impl.KafkaSendingServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DocumentRestController {
 
     private final ApplicationServiceImpl applicationService;
-    // TODO Kafka service (private final KafkaSendingServiceImpl kafkaSendingService;)
+    private final KafkaSendingServiceImpl kafkaSendingService;
 
     @PutMapping("{applicationId}/send")
     public void send(@PathVariable Long applicationId) {
@@ -31,7 +34,12 @@ public class DocumentRestController {
         log.info("Application status updated ({})", applicationStatus);
         applicationService.save(application);
 
-        // TODO sending message (SEND_DOCUMENTS)
+        // ! sending message (SEND_DOCUMENTS)
+        String email = application.getClient().getEmail();
+        EmailMessage message = new EmailMessage(email, Theme.SEND_DOCUMENTS, applicationId);
+        log.info("Message created. Theme: {}; reason: documents can be created and sent to the client (message: {})",
+                message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
 
         log.info("@PutMapping({applicationId}/send) send method finished.");
     }
@@ -40,12 +48,18 @@ public class DocumentRestController {
     public void sign(@PathVariable Long applicationId) {
         log.info("@PutMapping({applicationId}/sign) sign method called. Argument: {}", applicationId);
         Application application = applicationService.findById(applicationId);
-        application.setSesCode(ThreadLocalRandom.current().nextInt(100_000, 1_000_000));
         // ! generating SES code in range [100 000; 999 999]
+        int sesCode = ThreadLocalRandom.current().nextInt(100_000, 1_000_000);
+        application.setSesCode(sesCode);
         log.info("Application SES code set");
         applicationService.save(application);
 
-        // TODO sending message (SEND_SES)
+        // ! sending message (SEND_SES)
+        String email = application.getClient().getEmail();
+        EmailMessage message = new EmailMessage(email, Theme.SEND_SES, applicationId, String.valueOf(sesCode));
+        log.info("Message created. Theme: {}; reason: SES code generated and can be sent to the client (message: {})",
+                message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
 
         log.info("@PutMapping({applicationId}/sign) sign method finished.");
     }
@@ -64,13 +78,18 @@ public class DocumentRestController {
         log.info("Application status updated ({})", applicationStatus);
         application = applicationService.save(application);
 
-        // TODO sending message (CREDIT_ISSUED)
-
         applicationStatus = ApplicationStatus.CREDIT_ISSUED;
         application.setStatus(applicationStatus);
         application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, ChangeType.AUTOMATIC));
         log.info("Application status updated ({})", applicationStatus);
         applicationService.save(application);
+
+        // ! sending message (CREDIT_ISSUED)
+        String email = application.getClient().getEmail();
+        EmailMessage message = new EmailMessage(email, Theme.CREDIT_ISSUED, applicationId);
+        log.info("Message created. Theme: {}; reason: SES code verified and credit issued successfully (message: {})",
+                message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
 
         log.info("@PutMapping({applicationId}/code) code method finished.");
     }

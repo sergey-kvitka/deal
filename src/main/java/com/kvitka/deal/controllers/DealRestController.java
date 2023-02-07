@@ -6,14 +6,12 @@ import com.kvitka.deal.entities.Client;
 import com.kvitka.deal.entities.Credit;
 import com.kvitka.deal.enums.ApplicationStatus;
 import com.kvitka.deal.enums.CreditStatus;
+import com.kvitka.deal.enums.Theme;
 import com.kvitka.deal.jsonEntities.appliedOffer.AppliedOffer;
 import com.kvitka.deal.jsonEntities.passport.Passport;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory.StatusHistoryUnit;
-import com.kvitka.deal.services.impl.ApplicationServiceImpl;
-import com.kvitka.deal.services.impl.ClientServiceImpl;
-import com.kvitka.deal.services.impl.CreditServiceImpl;
-import com.kvitka.deal.services.impl.RestTemplateService;
+import com.kvitka.deal.services.impl.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +44,7 @@ public class DealRestController {
     private final ClientServiceImpl clientService;
     private final CreditServiceImpl creditService;
     private final RestTemplateService restTemplateService;
-    // TODO Kafka service (private final KafkaSendingServiceImpl kafkaSendingService;)
+    private final KafkaSendingServiceImpl kafkaSendingService;
 
     @PostMapping("application")
     public List<LoanOfferDTO> application(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO) {
@@ -106,6 +104,7 @@ public class DealRestController {
         Application application = applicationService.findById(applicationId);
         log.info("Application received from database ({})", application);
 
+        String email = application.getClient().getEmail();
         ApplicationStatus applicationStatus = ApplicationStatus.APPROVED;
 
         if (loanOfferDTO.isEmpty()) { // ! checking if all fields except applicationId are null
@@ -117,7 +116,11 @@ public class DealRestController {
             application = applicationService.save(application);
             log.warn("Application with updated status saved to the database as: {}", application);
 
-            // TODO sending message (APPLICATION_DENIED)
+            // ! sending message (APPLICATION_DENIED)
+            EmailMessage message = new EmailMessage(email, Theme.APPLICATION_DENIED, applicationId);
+            log.warn("Message created. Theme: {}; reason: client denied the offer (message: {})",
+                    message.getTheme(), message);
+            kafkaSendingService.sendMessage(message);
 
             log.warn("[@PutMapping(offer)] offer method finished.");
             return new ResponseEntity<>(HttpStatus.ACCEPTED);
@@ -132,7 +135,11 @@ public class DealRestController {
         application = applicationService.save(application);
         log.info("Modified application saved to the database as: {}", application);
 
-        // TODO sending message (FINISH_REGISTRATION)
+        // ! sending message (FINISH_REGISTRATION)
+        EmailMessage message = new EmailMessage(email, Theme.FINISH_REGISTRATION, applicationId);
+        log.info("Message created. Theme: {}; reason: application approved so client can finish the registration " +
+                "(message: {})", message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
 
         log.info("[@PutMapping(offer)] offer method finished.");
         return new ResponseEntity<>(HttpStatus.OK);
@@ -180,6 +187,7 @@ public class DealRestController {
                 appliedOffer.getIsSalaryClient());
         log.info("Scoring data created ({})", scoringDataDTO);
 
+        String email = client.getEmail();
         ApplicationStatus applicationStatus = ApplicationStatus.CC_APPROVED;
         CreditDTO creditDTO;
 
@@ -199,9 +207,12 @@ public class DealRestController {
             application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, AUTOMATIC));
             log.warn("Application status updated ({})", applicationStatus);
             application = applicationService.save(application);
-            log.warn("Application with updated status saved to the database as: {}", application);
+            log.warn("Application with updated status saved to the database as: {} ", application);
 
-            // TODO sending message (APPLICATION_DENIED)
+            // ! sending message (APPLICATION_DENIED)
+            EmailMessage message = new EmailMessage(email, Theme.APPLICATION_DENIED, applicationId);
+            log.warn("Message created. Theme: {}; reason: scoring failed (message: {})", message.getTheme(), message);
+            kafkaSendingService.sendMessage(message);
 
             throw e;
         }
@@ -222,7 +233,11 @@ public class DealRestController {
         application = applicationService.save(application);
         log.info("Application saved to the database as: {}", application);
 
-        // TODO sending message (CREATE_DOCUMENTS)
+        // ! sending message (CREATE_DOCUMENTS)
+        EmailMessage message = new EmailMessage(email, Theme.CREATE_DOCUMENTS, applicationId);
+        log.info("Message created. Theme: {}; reason: credit approved so the document creation can be requested " +
+                "(message: {})", message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
 
         log.info("[@PutMapping(calculate/{applicationId})] calculate method finished.");
     }
