@@ -15,6 +15,9 @@ spring:
   liquibase:
     enabled: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
 rest:
   conveyor:
     url: http://localhost:8081

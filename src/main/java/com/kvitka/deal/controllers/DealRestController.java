@@ -6,25 +6,26 @@ import com.kvitka.deal.entities.Client;
 import com.kvitka.deal.entities.Credit;
 import com.kvitka.deal.enums.ApplicationStatus;
 import com.kvitka.deal.enums.CreditStatus;
+import com.kvitka.deal.enums.Theme;
 import com.kvitka.deal.jsonEntities.appliedOffer.AppliedOffer;
 import com.kvitka.deal.jsonEntities.passport.Passport;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory.StatusHistoryUnit;
-import com.kvitka.deal.services.impl.ApplicationServiceImpl;
-import com.kvitka.deal.services.impl.ClientServiceImpl;
-import com.kvitka.deal.services.impl.CreditServiceImpl;
-import com.kvitka.deal.services.impl.RestTemplateService;
+import com.kvitka.deal.services.impl.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
 import static com.kvitka.deal.enums.ChangeType.AUTOMATIC;
+import static com.kvitka.deal.enums.ChangeType.MANUAL;
 
 @Slf4j
 @RestController
@@ -43,6 +44,7 @@ public class DealRestController {
     private final ClientServiceImpl clientService;
     private final CreditServiceImpl creditService;
     private final RestTemplateService restTemplateService;
+    private final KafkaSendingServiceImpl kafkaSendingService;
 
     @PostMapping("application")
     public List<LoanOfferDTO> application(@RequestBody LoanApplicationRequestDTO loanApplicationRequestDTO) {
@@ -94,7 +96,7 @@ public class DealRestController {
     }
 
     @PutMapping("offer")
-    public void offer(@RequestBody LoanOfferDTO loanOfferDTO) {
+    public ResponseEntity<?> offer(@RequestBody LoanOfferDTO loanOfferDTO) {
         log.info("[@PutMapping(offer)] offer method called. Argument: {}", loanOfferDTO);
 
         Long applicationId = loanOfferDTO.getApplicationId();
@@ -102,7 +104,28 @@ public class DealRestController {
         Application application = applicationService.findById(applicationId);
         log.info("Application received from database ({})", application);
 
+        String email = application.getClient().getEmail();
         ApplicationStatus applicationStatus = ApplicationStatus.APPROVED;
+
+        if (loanOfferDTO.isEmpty()) { // ! checking if all fields except applicationId are null
+            log.warn("loanOfferDTO is empty. That means that the client denied the offer");
+            applicationStatus = ApplicationStatus.CLIENT_DENIED;
+            application.setStatus(applicationStatus);
+            application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, MANUAL));
+            log.warn("Application status updated ({})", applicationStatus);
+            application = applicationService.save(application);
+            log.warn("Application with updated status saved to the database as: {}", application);
+
+            // ! sending message (APPLICATION_DENIED)
+            EmailMessage message = new EmailMessage(email, Theme.APPLICATION_DENIED, applicationId);
+            log.warn("Message created. Theme: {}; reason: client denied the offer (message: {})",
+                    message.getTheme(), message);
+            kafkaSendingService.sendMessage(message);
+
+            log.warn("[@PutMapping(offer)] offer method finished.");
+            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        }
+
         application.setStatus(applicationStatus);
         application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, AUTOMATIC));
         application.setAppliedOffer(loanOfferDTO.toAppliedOffer());
@@ -111,13 +134,21 @@ public class DealRestController {
 
         application = applicationService.save(application);
         log.info("Modified application saved to the database as: {}", application);
+
+        // ! sending message (FINISH_REGISTRATION)
+        EmailMessage message = new EmailMessage(email, Theme.FINISH_REGISTRATION, applicationId);
+        log.info("Message created. Theme: {}; reason: application approved so client can finish the registration " +
+                "(message: {})", message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
+
         log.info("[@PutMapping(offer)] offer method finished.");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PutMapping("calculate/{applicationId}")
     public void calculate(@PathVariable Long applicationId,
                           @RequestBody FinishRegistrationRequestDTO finishRegistrationRequestDTO) {
-        log.info("[@PutMapping(calculate/{applicationId})] offer method called. Argument: {}",
+        log.info("[@PutMapping(calculate/{applicationId})] calculate method called. Argument: {}",
                 finishRegistrationRequestDTO);
 
         Application application = applicationService.findById(applicationId);
@@ -156,13 +187,35 @@ public class DealRestController {
                 appliedOffer.getIsSalaryClient());
         log.info("Scoring data created ({})", scoringDataDTO);
 
-        String calculationConveyorURL = conveyorURL + '/' + calculationConveyorEndpoint;
-        log.info("Sending POST request on \"{}\" (request body: {})", calculationConveyorURL, scoringDataDTO);
-        ResponseEntity<CreditDTO> creditDTOResponse = restTemplateService.postForEntity(
-                calculationConveyorURL, scoringDataDTO, CreditDTO.class);
-        log.info("POST request on \"{}\" sent successfully!", calculationConveyorURL);
-        CreditDTO creditDTO = Objects.requireNonNull(creditDTOResponse.getBody());
-        log.info("Response from POST request on \"{}\" is: {}", calculationConveyorURL, creditDTO);
+        String email = client.getEmail();
+        ApplicationStatus applicationStatus = ApplicationStatus.CC_APPROVED;
+        CreditDTO creditDTO;
+
+        try {
+            String calculationConveyorURL = conveyorURL + '/' + calculationConveyorEndpoint;
+            log.info("Sending POST request on \"{}\" (request body: {})", calculationConveyorURL, scoringDataDTO);
+            ResponseEntity<CreditDTO> creditDTOResponse = restTemplateService.postForEntity(
+                    calculationConveyorURL, scoringDataDTO, CreditDTO.class);
+            log.info("POST request on \"{}\" sent successfully!", calculationConveyorURL);
+            creditDTO = Objects.requireNonNull(creditDTOResponse.getBody());
+            log.info("Response from POST request on \"{}\" is: {}", calculationConveyorURL, creditDTO);
+        } catch (HttpClientErrorException e) {
+
+            log.warn("Scoring failed. Application will be denied");
+            applicationStatus = ApplicationStatus.CC_DENIED;
+            application.setStatus(applicationStatus);
+            application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, AUTOMATIC));
+            log.warn("Application status updated ({})", applicationStatus);
+            application = applicationService.save(application);
+            log.warn("Application with updated status saved to the database as: {} ", application);
+
+            // ! sending message (APPLICATION_DENIED)
+            EmailMessage message = new EmailMessage(email, Theme.APPLICATION_DENIED, applicationId);
+            log.warn("Message created. Theme: {}; reason: scoring failed (message: {})", message.getTheme(), message);
+            kafkaSendingService.sendMessage(message);
+
+            throw e;
+        }
 
         Credit credit = creditDTO.toCredit();
         credit.setCreditStatus(CreditStatus.CALCULATED);
@@ -170,11 +223,22 @@ public class DealRestController {
         credit = creditService.save(credit);
         log.info("Created credit saved to the database as: {}", credit);
 
+        application.setStatus(applicationStatus);
+        application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, AUTOMATIC));
+        log.info("Application status updated ({})", applicationStatus);
         application.setCredit(credit);
         log.info("Application's credit updated, and now application is ready to be saved to the database." +
                 " Current values are: {}", application);
 
-        applicationService.save(application);
+        application = applicationService.save(application);
         log.info("Application saved to the database as: {}", application);
+
+        // ! sending message (CREATE_DOCUMENTS)
+        EmailMessage message = new EmailMessage(email, Theme.CREATE_DOCUMENTS, applicationId);
+        log.info("Message created. Theme: {}; reason: credit approved so the document creation can be requested " +
+                "(message: {})", message.getTheme(), message);
+        kafkaSendingService.sendMessage(message);
+
+        log.info("[@PutMapping(calculate/{applicationId})] calculate method finished.");
     }
 }
