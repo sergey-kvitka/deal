@@ -21,11 +21,17 @@ public class ExceptionHandlingController {
     public ResponseEntity<String> httpClientErrorExceptionHandler(HttpClientErrorException e) {
         String exceptionSimpleName = "HttpClientErrorException";
         String exceptionMessage = e.getMessage();
+
+        String matchedMessage = null;
         Matcher matcher = Pattern.compile("\\[(.*?)]").matcher(exceptionMessage == null ? "" : exceptionMessage);
+        if (matcher.find()) matchedMessage = matcher.group(1);
+        else matcher = Pattern.compile("\"(.*?)\"").matcher(exceptionMessage == null ? "" : exceptionMessage);
+        if (matcher.find()) matchedMessage = matcher.group(1);
+
         log.warn("{} handled (message: {})", exceptionSimpleName, exceptionMessage);
-        return ResponseEntity.badRequest().body(matcher.find()
-                ? matcher.group(1)
-                : exceptionSimpleName + ": " + exceptionMessage
+        return ResponseEntity.badRequest().body(matchedMessage == null
+                ? exceptionSimpleName + ": " + exceptionMessage
+                : matchedMessage
         );
     }
 
