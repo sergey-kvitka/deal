@@ -4,6 +4,7 @@ import com.kvitka.deal.dtos.EmailMessage;
 import com.kvitka.deal.entities.Application;
 import com.kvitka.deal.enums.ApplicationStatus;
 import com.kvitka.deal.enums.ChangeType;
+import com.kvitka.deal.enums.CreditStatus;
 import com.kvitka.deal.enums.Theme;
 import com.kvitka.deal.jsonEntities.statusHistory.StatusHistory.StatusHistoryUnit;
 import com.kvitka.deal.services.impl.ApplicationServiceImpl;
@@ -82,6 +83,9 @@ public class DocumentRestController {
         application.setStatus(applicationStatus);
         application.getStatusHistory().add(new StatusHistoryUnit(applicationStatus, ChangeType.AUTOMATIC));
         log.info("Application status updated ({})", applicationStatus);
+        CreditStatus creditStatus = CreditStatus.ISSUED;
+        application.getCredit().setCreditStatus(creditStatus);
+        log.info("Credit status (in application.credit) updated ({})", creditStatus);
         applicationService.save(application);
 
         // ! sending message (CREDIT_ISSUED)
@@ -93,5 +97,4 @@ public class DocumentRestController {
 
         log.info("@PutMapping({applicationId}/code) code method finished.");
     }
-
 }
