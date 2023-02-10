@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-client
+      author: kvitka
+      changes:
+        - createTable:
+            tableName: client
+            columns:
+              - column:
+                  name: client_id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account
+                  type: varchar(255)
+              - column:
+                  name: birth_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dependent_amount
+                  type: integer
+              - column:
+                  name: employment
+                  type: jsonb
+              - column:
+                  name: gender
+                  type: varchar(255)
+              - column:
+                  name: marital_status
+                  type: varchar(255)
+              - column:
+                  name: middle_name
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: passport
+                  type: jsonb
+                  constraints:
+                    nullable: false
